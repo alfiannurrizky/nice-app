@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nicedb
+      MYSQL_USER: niceuser
+      MYSQL_PASSWORD: nicepass
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: niceuser
+      DB_PASSWORD: nicepass
+      DB_NAME: nicedb
+      JWT_SECRET: super_secret_jwt_key_nice_app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
